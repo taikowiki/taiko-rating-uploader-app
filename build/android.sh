@@ -1,0 +1,1 @@
+npx cap build --keystorepath keystore.jks --keystorepass spasname0! --keystorealias taikowiki-rating-upload-key-1 --keystorealiaspass spasname0! android  

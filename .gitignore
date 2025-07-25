@@ -1,5 +1,5 @@
 keystore.jks
 keystore
 tests
-android
-build
+node_modules
+build/android
