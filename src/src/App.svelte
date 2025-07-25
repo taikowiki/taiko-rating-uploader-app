@@ -6,6 +6,7 @@
     import NamcoLogin from "./components/hiroba-login/NamcoLogin.svelte";
     import CardLogin from "./components/hiroba-login/CardLogin.svelte";
     import "./module/fetch";
+    import HirobaLogin from "./components/hiroba-login/HirobaLogin.svelte";
 
     const routes: RouteConfig[] = [
         {
@@ -25,7 +26,19 @@
 </script>
 
 {#await loadHiroba() then}
-    {#if hiroba.currentLogin}
+    {#if !hiroba.currentLogin}
+        <HirobaLogin
+            namcoLogined={hiroba.namcoLogined}
+            cardList={hiroba.cardList}
+            cardLogin={async (taikoNumber) =>
+                await hiroba.cardLogin(taikoNumber)}
+            setToken={async (token) => {
+                hiroba.setToken(token);
+                await SecureStorage.set("token", token);
+            }}
+            checkNamcoLogined={async () => await hiroba.checkNamcoLogined()}
+        />
+    {:else}
         <img src={hiroba.currentLogin.myDon} alt="mydon" />
         <div>
             {hiroba.currentLogin.nickname}
@@ -33,19 +46,5 @@
         <div>
             {hiroba.currentLogin.taikoNumber}
         </div>
-    {:else if hiroba.namcoLogined}
-        <CardLogin
-            cardList={hiroba.cardList}
-            cardLogin={async (taikoNumber) =>
-                await hiroba.cardLogin(taikoNumber)}
-        />
-    {:else}
-        <NamcoLogin
-            setToken={async (token) => {
-                hiroba.setToken(token);
-                await SecureStorage.set("token", token);
-            }}
-            checkNamcoLogined={async () => await hiroba.checkNamcoLogined()}
-        />
     {/if}
 {/await}
