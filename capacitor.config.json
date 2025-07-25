@@ -1,0 +1,10 @@
+{
+  "appId": "com.taikowiki.ratinguploader",
+  "appName": "Taiko Rating Uploader",
+  "webDir": "www",
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}
