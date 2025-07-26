@@ -7,13 +7,23 @@
     import { WikiProfile } from "./module/WikiProfile.svelte";
     import WikiLogin from "./components/wiki-login/WikiLogin.svelte";
     import Main from "./components/Main.svelte";
-    import { DonderHiroba } from "hiroba-js";
-    import { Capacitor } from "@capacitor/core";
-    import { getTheme, setTheme, useTheme } from "./module/theme.svelte";
+    import { Capacitor, CapacitorCookies } from "@capacitor/core";
+    import { getTheme, useTheme } from "./module/theme.svelte";
     import Nav from "./components/Nav.svelte";
+    import Uploader from "./components/uploader/Uploader.svelte";
+    import { RatingUploader } from "./module/RatingUploader.svelte";
+    import { setContext } from "svelte";
 
-    let hirobaProfile = $state(new HirobaProfile());
-    let wikiProfile = $state(new WikiProfile());
+    let hirobaProfile = new HirobaProfile();
+    let wikiProfile = new WikiProfile();
+    let ratingUploader = new RatingUploader();
+    let hash = $state({hash: location.hash || '#'});
+
+    setContext("hirobaProfile", hirobaProfile);
+    setContext("wikiProfile", wikiProfile);
+    setContext("ratingUploader", ratingUploader);
+    setContext('hash', hash);
+
     if (Capacitor.getPlatform() === "web") {
         hirobaProfile.currentLogin = {
             taikoNumber: "000000000001",
@@ -26,39 +36,53 @@
         };
     }
 
+    window.addEventListener('hashchange', () => {
+        hash.hash = location.hash || '#';
+    })
+
     useTheme();
     let theme = $derived(getTheme());
 
-    let routes: RouteConfig[] = $derived([
-        {
-            path: "",
-            component: Main,
-            props: {
-                hirobaCard: hirobaProfile.currentLogin,
-                wikiProfile: wikiProfile.currentLogin,
-                cardLogout: () => hirobaProfile.checkNamcoLogined(),
-                hirobaLogout: async () => {
-                    await SecureStorage.remove("hiroba-token");
-                    hirobaProfile = new HirobaProfile();
-                },
-                wikiLogout: async () => {
-                    await SecureStorage.remove("wiki-token");
-                    wikiProfile = new WikiProfile();
+    let routes: RouteConfig[] = $derived.by(() => {
+        return [
+            {
+                path: "",
+                component: Main,
+            },
+            {
+                path: "upload",
+                component: Uploader,
+                props: {
+                    hirobaCard: hirobaProfile.currentLogin,
+                    message: ratingUploader.message,
+                    upload: async () => {
+                        await ratingUploader.upload(hirobaProfile, wikiProfile);
+                    },
                 },
             },
-        },
-    ]);
+        ];
+    });
 
     async function loadHiroba() {
         if (Capacitor.getPlatform() === "web") return;
         const hirobaToken = await SecureStorage.get("hiroba-token");
         if (hirobaToken) {
-            hirobaProfile.setToken(hirobaToken);
+            await CapacitorCookies.setCookie({
+                url: "https://donderhiroba.jp",
+                key: '_token_v2',
+                value: hirobaToken,
+                path: '/'
+            })
             await hirobaProfile.checkCardLogined();
         }
         const wikiToken = await SecureStorage.get("wiki-token");
         if (wikiToken) {
-            wikiProfile.setToken(wikiToken);
+            await CapacitorCookies.setCookie({
+                url: "https://taiko.wiki",
+                key: 'auth-user',
+                value: wikiToken,
+                path: '/'
+            })
             await wikiProfile.checkLogined();
         }
     }
@@ -73,7 +97,6 @@
                 cardLogin={async (taikoNumber) =>
                     await hirobaProfile.cardLogin(taikoNumber)}
                 setToken={async (token) => {
-                    hirobaProfile.setToken(token);
                     await SecureStorage.set("hiroba-token", token);
                 }}
                 checkNamcoLogined={async () =>
@@ -84,7 +107,6 @@
         <main data-theme={theme}>
             <WikiLogin
                 setToken={async (token) => {
-                    wikiProfile.setToken(token);
                     await SecureStorage.set("wiki-token", token);
                 }}
                 checkLogined={async () => await wikiProfile.checkLogined()}

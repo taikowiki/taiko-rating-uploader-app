@@ -4,17 +4,23 @@ async function fetchWrapper(url: string, options: RequestInit = {}) {
     const method = options.method?.toUpperCase() || 'GET';
 
     const headers: Record<string, string> = {};
-    for (const [key, value] of Object.entries(options.headers || {})) {
-        headers[key] = String(value);
+    if (options.headers instanceof Headers) {
+        for (const [key, value] of options.headers.entries()) {
+            headers[key.split('-').map((e) => `${e[0].toUpperCase()}${e.slice(1)}`).join('-')] = String(value);
+        }
     }
-
+    else {
+        for (const [key, value] of Object.entries(options.headers || {})) {
+            headers[key.split('-').map((e) => `${e[0].toUpperCase()}${e.slice(1)}`).join('-')] = String(value);
+        }
+    }
     const response = await CapacitorHttp.request({
         method,
         url,
         headers,
-        data: `${options.body}`,
+        data: options.body ? `${options.body}` : undefined,
         disableRedirects: options?.redirect === 'manual',
-        webFetchExtra: options,
+        //webFetchExtra: options,
     });
 
     const responseHeaders: Record<string, string> = {};

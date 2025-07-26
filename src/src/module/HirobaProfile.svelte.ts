@@ -4,19 +4,13 @@ import { SvelteMap } from "svelte/reactivity";
 const { HirobaError, Const } = util;
 
 class HirobaProfile {
-    protected token?: string = $state(undefined);
     namcoLogined: boolean = $state(false);
     cardLogined: boolean = $state(false);
     currentLogin: CardData | null = $state(null);
-    cardList: CardData[] = [];
+    cardList: CardData[] = $state([]);
     clearData = new SvelteMap<string, ClearData>();
     scoreData = new SvelteMap<string, ScoreData>();
-    ticket: string | null = null;
-
-    constructor(token?: string) {
-        this.token = token;
-    }
-
+    ticket: string | null = $state(null);
     /**
      * 남코 계정에 로그인 되어있는 지 체크합니다. 이 함수를 사용하면 카드 로그인이 풀립니다.
      * @returns
@@ -27,7 +21,7 @@ class HirobaProfile {
         this.currentLogin = null;
 
         try {
-            this.cardList = await DonderHiroba.func.getCardList({ token: this.token });
+            this.cardList = await DonderHiroba.func.getCardList();
             this.namcoLogined = true;
             return true;
         }
@@ -68,7 +62,7 @@ class HirobaProfile {
         const lastLogin = this.currentLogin;
         this.cardLogined = false;
         this.currentLogin = null;
-        this.cardList = await this.loginedCheckWrapper(() => DonderHiroba.func.getCardList({ token: this.token }));
+        this.cardList = await this.loginedCheckWrapper(() => DonderHiroba.func.getCardList());
         if (lastLogin && this.cardList.find((e) => e.taikoNumber === lastLogin?.taikoNumber)) {
             await this.cardLogin(lastLogin.taikoNumber);
         }
@@ -82,7 +76,6 @@ class HirobaProfile {
         try {
             this.currentLogin = await this.loginedCheckWrapper(async () => {
                 return await DonderHiroba.func.cardLogin({
-                    token: this.token,
                     taikoNumber,
                     cardList: this.cardList
                 });
@@ -106,7 +99,7 @@ class HirobaProfile {
      * @returns 
      */
     async updateClearData(genre?: keyof typeof Const.genre) {
-        const clearDataHtml = await this.loginedCheckWrapper<Promise<string | string[]>>(() => genre ? DonderHiroba.request.clearData({ token: this.token, genre }) : DonderHiroba.request.clearData({ token: this.token }));
+        const clearDataHtml = await this.loginedCheckWrapper<Promise<string | string[]>>(() => genre ? DonderHiroba.request.clearData({ genre }) : DonderHiroba.request.clearData());
         const clearData: ClearData[] = [];
         if (Array.isArray(clearDataHtml)) {
             clearDataHtml.forEach((html) => {
@@ -135,7 +128,7 @@ class HirobaProfile {
      * @returns 
      */
     async updateScoreData(songNo: string, difficulty?: Difficulty) {
-        const scoreDataHtml = await this.loginedCheckWrapper<Promise<string | string[]>>(() => difficulty ? DonderHiroba.request.scoreData({ token: this.token, songNo, difficulty }) : DonderHiroba.request.scoreData({ token: this.token, songNo }));
+        const scoreDataHtml = await this.loginedCheckWrapper<Promise<string | string[]>>(() => difficulty ? DonderHiroba.request.scoreData({ songNo, difficulty }) : DonderHiroba.request.scoreData({ songNo }));
         if (Array.isArray(scoreDataHtml)) {
             var scoreData = DonderHiroba.parse.scoreData({ html: scoreDataHtml, songNo });
             this.ticket = DonderHiroba.parse.ticket(scoreDataHtml[scoreDataHtml.length - 1]);
@@ -166,7 +159,10 @@ class HirobaProfile {
         //    await this.getTicket();
         //}
 
-        await DonderHiroba.func.updateRecord({ token: this.token });
+        if (!this.ticket) {
+            this.getTicket();
+        }
+        await DonderHiroba.func.updateRecord({ ticket: this.ticket ?? undefined });
     }
 
     async changeName(newName: string) {
@@ -174,23 +170,26 @@ class HirobaProfile {
             await this.getTicket();
         }
 
-        await DonderHiroba.func.changeName({ token: this.token, ticket: this.ticket as string, newName });
+        await DonderHiroba.func.changeName({ ticket: this.ticket as string, newName });
         await this.checkCardLogined();
 
         return this.currentLogin;
     }
 
     async getTicket() {
-        const ticket = await this.loginedCheckWrapper(() => DonderHiroba.func.getTicket({ token: this.token }));
+        const ticket = await this.loginedCheckWrapper(() => DonderHiroba.func.getTicket());
         this.ticket = ticket;
         return ticket;
     }
 
-    setToken(token: string) {
-        this.token = token;
-    }
-    getToken() {
-        return this.token;
+    initialize() {
+        this.namcoLogined = false;
+        this.cardLogined = false;
+        this.currentLogin = null;
+        this.cardList = [];
+        this.clearData = new SvelteMap<string, ClearData>();
+        this.scoreData = new SvelteMap<string, ScoreData>();
+        this.ticket = null;
     }
 
     /**

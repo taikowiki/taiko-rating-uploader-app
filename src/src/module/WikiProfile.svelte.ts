@@ -1,28 +1,8 @@
-import TaikowikiApi from "@taiko-wiki/taikowiki-api";
-
 export class WikiProfile{
-    token?: string = $state();
     currentLogin: {nickname: string, UUID: string} | null = $state(null);
 
-    constructor(token?:string){
-        this.token = token;
-    }
-
-    setToken(token: string){
-        this.token = token;
-    }
-    getToken(){
-        return this.token;
-    }
-
     async checkLogined(){
-        if(!this.token) return;
-
-        const response = await fetch('https://taiko.wiki/api/user', {
-            headers: {
-                cookie: `auth-user=${this.token}`
-            }
-        });
+        const response = await fetch('https://taiko.wiki/api/user');
 
         const data = await response.json();
 
@@ -35,5 +15,9 @@ export class WikiProfile{
         else{
             this.currentLogin = null;
         }
+    }
+
+    initialize(){
+        this.currentLogin = null;
     }
 }

@@ -15,7 +15,7 @@ export function setTheme(theme: 'light' | 'dark') {
 }
 
 export function useTheme() {
-    const isDarkMode = (window.localStorage.getItem('theme') === 'dark') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const isDarkMode = (window.localStorage.getItem('theme') !== 'light') && (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
     if(isDarkMode){
         THEME.value = 'dark';
     }

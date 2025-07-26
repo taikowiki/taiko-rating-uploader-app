@@ -38,7 +38,6 @@
     <span>taiko.wiki에 로그인 되어있지 않습니다.</span>
     <span>아래 버튼을 눌러 로그인 해 주십시오.</span>
     <button onclick={openWikiLoginBrowser}>taiko.wiki 로그인</button>
-
 </div>
 
 <style>

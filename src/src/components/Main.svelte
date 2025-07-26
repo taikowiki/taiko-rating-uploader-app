@@ -1,24 +1,31 @@
 <script lang="ts">
     import type { CardData } from "hiroba-js";
     import { getTheme } from "../module/theme.svelte";
+    import { getContext } from "svelte";
+    import type { HirobaProfile } from "../module/HirobaProfile.svelte";
+    import type { WikiProfile } from "../module/WikiProfile.svelte";
+    import { SecureStorage } from "../module/SecureStorage";
 
-    interface Props {
-        hirobaCard: CardData;
-        wikiProfile: { nickname: string; UUID: string };
-        cardLogout: () => Promise<any>;
-        hirobaLogout: () => Promise<any>;
-        wikiLogout: () => Promise<any>;
-    }
+    let hirobaProfile = getContext("hirobaProfile") as HirobaProfile;
+    let wikiProfile = getContext("wikiProfile") as WikiProfile;
 
-    let {
-        hirobaCard,
-        wikiProfile,
-        cardLogout,
-        hirobaLogout,
-        wikiLogout,
-    }: Props = $props();
+    let hirobaCard = $derived(hirobaProfile.currentLogin) as CardData;
+    let wikiCurrentLogin = $derived(wikiProfile.currentLogin) as {
+        nickname: string;
+        UUID: string;
+    };
 
     let theme = $derived(getTheme());
+
+    const cardLogout = () => hirobaProfile.checkNamcoLogined();
+    const hirobaLogout = async () => {
+        await SecureStorage.remove("hiroba-token");
+        hirobaProfile.initialize();
+    };
+    const wikiLogout = async () => {
+        await SecureStorage.remove("wiki-token");
+        wikiProfile.initialize();
+    };
 </script>
 
 {#snippet hirobaCardView()}
@@ -56,8 +63,8 @@
             </div>
         </div>
         <div class="content">
-            <div class="nickname">{wikiProfile.nickname}</div>
-            <div class="UUID">{wikiProfile.UUID}</div>
+            <div class="nickname">{wikiCurrentLogin.nickname}</div>
+            <div class="UUID">{wikiCurrentLogin.UUID}</div>
         </div>
     </div>
 {/snippet}
