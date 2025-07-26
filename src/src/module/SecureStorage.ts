@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 
 export namespace SecureStorage {
@@ -15,11 +16,21 @@ export namespace SecureStorage {
     }
 
     export async function remove(key: string) {
-        return await SecureStoragePlugin.remove({ key }).then(({ value }) => value);
+        try {
+            return await SecureStoragePlugin.remove({ key }).then(({ value }) => value);
+        }
+        catch {
+            return false;
+        }
     }
 
     export async function clear() {
-        return await SecureStoragePlugin.clear().then(({ value }) => value);
+        try {
+            return await SecureStoragePlugin.clear().then(({ value }) => value);
+        }
+        catch {
+            return false;
+        }
     }
 
     export async function keys() {
@@ -29,4 +40,9 @@ export namespace SecureStorage {
     export async function getPlatform() {
         return await SecureStoragePlugin.getPlatform().then(({ value }) => value);
     }
+}
+
+if (Capacitor.getPlatform() === "web") {
+    //@ts-expect-error
+    window.SecureStorage = SecureStorage;
 }

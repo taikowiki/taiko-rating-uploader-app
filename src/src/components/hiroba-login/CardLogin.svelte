@@ -1,26 +1,91 @@
 <script lang="ts">
     import type { CardData } from "hiroba-js";
 
-
-    interface Props{
+    interface Props {
         cardList: CardData[];
-        cardLogin: (taikoNumber: string) => Promise<any>
+        cardLogin: (taikoNumber: string) => Promise<any>;
     }
 
-    let {cardList, cardLogin}: Props = $props();
+    let { cardList, cardLogin }: Props = $props();
 </script>
 
-{#each cardList as card}
-    <div>
-        <img src={card.myDon} alt="mydon">
-        <div>
-            {card.nickname}
+<div class="container">
+    <div>카드를 선택 해 주십시오.</div>
+    {#each cardList as card}
+        <div class="card">
+            <div class="profile">
+                <img class="mydon" src={card.myDon} alt="mydon" />
+                <div class="detail">
+                    <div class="nickname">
+                        {card.nickname}
+                    </div>
+                    <div class="taikonumber">
+                        {card.taikoNumber}
+                    </div>
+                </div>
+            </div>
+            <button onclick={() => cardLogin(card.taikoNumber)}>
+                로그인
+            </button>
         </div>
-        <div>
-            {card.taikoNumber}
-        </div>
-        <button onclick={() => cardLogin(card.taikoNumber)}>
-            로그인
-        </button>
-    </div>
-{/each}
+    {/each}
+</div>
+
+<style>
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        box-sizing: padding;
+
+        row-gap: 20px;
+    }
+
+    .card {
+        width: 100%;
+        max-width: 300px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        box-sizing: border-box;
+        padding: 20px;
+
+        border: 1px solid gray;
+        border-radius: 10px;
+
+        row-gap: 10px;
+    }
+
+    .profile {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        column-gap: 10px;
+    }
+
+    .mydon {
+        width: 80px;
+        height: 80px;
+    }
+
+    .detail {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        row-gap: 5px;
+    }
+
+    .nickname {
+        font-weight: bold;
+        font-size: 18px;
+    }
+
+    .taikonumber {
+        font-size: 13px;
+    }
+</style>

@@ -16,7 +16,7 @@ async function fetchWrapper(url: string, options: RequestInit = {}) {
         disableRedirects: options?.redirect === 'manual',
         webFetchExtra: options,
     });
-    
+
     const responseHeaders: Record<string, string> = {};
     Object.entries(response.headers).forEach(([key, string]) => {
         responseHeaders[key.toLowerCase()] = string;
@@ -26,8 +26,8 @@ async function fetchWrapper(url: string, options: RequestInit = {}) {
     return {
         ok: response.status >= 200 && response.status < 300,
         status: response.status,
-        json: async () => typeof(response.data) === "string" ? JSON.parse(response.data) : response.data,
-        text: async () => typeof(response.data) === "string" ? response.data : JSON.stringify(response.data),
+        json: async () => typeof (response.data) === "string" ? JSON.parse(response.data) : response.data,
+        text: async () => typeof (response.data) === "string" ? response.data : JSON.stringify(response.data),
         headers: {
             ...responseHeaders,
             get: (name: string) => responseHeaders[name.toLowerCase()] ?? null,

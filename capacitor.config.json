@@ -6,8 +6,11 @@
     "CapacitorHttp": {
       "enabled": true
     },
-    "CapacitorCookies":{
+    "CapacitorCookies": {
       "enalbed": true
     }
+  },
+  "android": {
+    "adjustMarginsForEdgeToEdge": "force"
   }
 }

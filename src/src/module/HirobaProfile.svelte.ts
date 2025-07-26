@@ -1,10 +1,10 @@
-import { DonderHiroba as D, util, type CardData, type ClearData, type Difficulty, type ScoreData } from "hiroba-js";
+import { DonderHiroba, type CardData, type ClearData, type ScoreData, util, type Difficulty } from "hiroba-js";
 import { SvelteMap } from "svelte/reactivity";
 
-const { HirobaError, Const, createHeader } = util;
+const { HirobaError, Const } = util;
 
-export class DonderHiroba {
-    private token?: string = $state(undefined);
+class HirobaProfile {
+    protected token?: string = $state(undefined);
     namcoLogined: boolean = $state(false);
     cardLogined: boolean = $state(false);
     currentLogin: CardData | null = $state(null);
@@ -24,6 +24,7 @@ export class DonderHiroba {
     async checkNamcoLogined() {
         this.cardLogined = false;
         this.namcoLogined = false;
+        this.currentLogin = null;
 
         try {
             this.cardList = await DonderHiroba.func.getCardList({ token: this.token });
@@ -64,7 +65,13 @@ export class DonderHiroba {
      * 이 경우 카드 로그인이 풀립니다.
      */
     async reloadCardList() {
-        this.cardList = await DonderHiroba.func.getCardList({ token: this.token });
+        const lastLogin = this.currentLogin;
+        this.cardLogined = false;
+        this.currentLogin = null;
+        this.cardList = await this.loginedCheckWrapper(() => DonderHiroba.func.getCardList({ token: this.token }));
+        if (lastLogin && this.cardList.find((e) => e.taikoNumber === lastLogin?.taikoNumber)) {
+            await this.cardLogin(lastLogin.taikoNumber);
+        }
     }
 
     /**
@@ -182,7 +189,6 @@ export class DonderHiroba {
     setToken(token: string) {
         this.token = token;
     }
-
     getToken() {
         return this.token;
     }
@@ -192,7 +198,7 @@ export class DonderHiroba {
      * @param callback 
      * @returns 
      */
-    private async loginedCheckWrapper<T = void>(callback: () => (T | Promise<T>)) {
+    protected async loginedCheckWrapper<T = void>(callback: () => (T | Promise<T>)) {
         try {
             return await callback();
         }
@@ -208,72 +214,4 @@ export class DonderHiroba {
     }
 }
 
-export namespace DonderHiroba {
-    export const login = D.login;
-    export const parse = D.parse;
-    export const request = D.request;
-    export const func = D.func;
-    func.cardLogin = async function(data: { token?: string, taikoNumber: string, cardList?: CardData[] }) {
-        const { token, taikoNumber } = data;
-
-        const cardList = data.cardList ?? await func.getCardList(data);
-        const matchedCardIndex = cardList.findIndex(card => card.taikoNumber === taikoNumber);
-
-        if (matchedCardIndex === -1) {
-            throw new HirobaError('NO_MATCHED_CARD');
-        }
-
-        let response: Response;
-        // 첫 번째 요청
-        // 302 응답
-        try {
-            const params = new URLSearchParams();
-            params.set('id_pos', `${matchedCardIndex + 1}`);
-            params.set('mode', 'exec');
-
-            response = await fetch('https://donderhiroba.jp/login_select.php', {
-                method: 'post',
-                headers: {
-                    'content-type': "application/x-www-form-urlencoded; charset=UTF-8",
-                    ...createHeader(token ? `_token_v2=${token}` : undefined),
-
-                },
-                redirect: 'manual',
-                body: params
-            });
-
-            if (response.status !== 302) {
-                throw response;
-            }
-        }
-        catch (err) {
-            if (err instanceof Response) {
-                throw new HirobaError('CANNOT_CONNECT', err);
-            }
-            else {
-                throw new HirobaError('CANNOT_CONNECT');
-            }
-        }
-
-        // 두 번째 요청
-        // 200 응답
-        try {
-            response = await fetch(response.headers.get('location') as string, {
-                method: 'get',
-                headers: createHeader(token ? `_token_v2=${token}` : undefined)
-            });
-
-            if (response.status !== 200) throw response;
-        }
-        catch (err) {
-            if (err instanceof Response) {
-                throw new HirobaError('CANNOT_CONNECT', err);
-            }
-            else {
-                throw new HirobaError('CANNOT_CONNECT');
-            }
-        };
-
-        return cardList[matchedCardIndex];
-    }
-};
+export { HirobaProfile };
