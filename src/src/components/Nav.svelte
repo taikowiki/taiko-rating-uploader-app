@@ -22,12 +22,12 @@
         },
         {
             text: "기록",
-            href: "/history",
+            href: "#history",
             iconSrc: historyIcon,
         },
         {
             text: "설정",
-            href: "/setting",
+            href: "#setting",
             iconSrc: settingIcon,
         },
     ];
