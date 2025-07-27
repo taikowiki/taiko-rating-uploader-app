@@ -1,5 +1,22 @@
+# Dependencies
+node_modules
+
+# Build output
+/build/
+/www/
+
+# Keystore
 keystore.jks
 keystore
+
+# Config
+/android/local.properties
+
+# System Files
+.DS_Store
+
+# IDE
+.idea/
+
+# Ignored from original file
 tests
-node_modules
-build/android
