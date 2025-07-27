@@ -7,22 +7,23 @@
     import { WikiProfile } from "./module/WikiProfile.svelte";
     import WikiLogin from "./components/wiki-login/WikiLogin.svelte";
     import Main from "./components/Main.svelte";
-    import { Capacitor, CapacitorCookies } from "@capacitor/core";
+    import { Capacitor } from "@capacitor/core";
     import { getTheme, useTheme } from "./module/theme.svelte";
     import Nav from "./components/Nav.svelte";
     import Uploader from "./components/uploader/Uploader.svelte";
     import { RatingUploader } from "./module/RatingUploader.svelte";
-    import { setContext } from "svelte";
+    import { setContext, tick } from "svelte";
+    import loading from "./assets/icon/loading.svg";
 
     let hirobaProfile = new HirobaProfile();
     let wikiProfile = new WikiProfile();
     let ratingUploader = new RatingUploader();
-    let hash = $state({hash: location.hash || '#'});
+    let hash = $state({ hash: location.hash || "#" });
 
     setContext("hirobaProfile", hirobaProfile);
     setContext("wikiProfile", wikiProfile);
     setContext("ratingUploader", ratingUploader);
-    setContext('hash', hash);
+    setContext("hash", hash);
 
     if (Capacitor.getPlatform() === "web") {
         hirobaProfile.currentLogin = {
@@ -36,59 +37,35 @@
         };
     }
 
-    window.addEventListener('hashchange', () => {
-        hash.hash = location.hash || '#';
-    })
+    window.addEventListener("hashchange", () => {
+        hash.hash = location.hash || "#";
+    });
 
     useTheme();
     let theme = $derived(getTheme());
 
-    let routes: RouteConfig[] = $derived.by(() => {
-        return [
-            {
-                path: "",
-                component: Main,
-            },
-            {
-                path: "upload",
-                component: Uploader,
-                props: {
-                    hirobaCard: hirobaProfile.currentLogin,
-                    message: ratingUploader.message,
-                    upload: async () => {
-                        await ratingUploader.upload(hirobaProfile, wikiProfile);
-                    },
-                },
-            },
-        ];
-    });
+    let routes: RouteConfig[] = [
+        {
+            path: "",
+            component: Main,
+        },
+        {
+            path: "upload",
+            component: Uploader,
+        },
+    ];
 
     async function loadHiroba() {
         if (Capacitor.getPlatform() === "web") return;
-        const hirobaToken = await SecureStorage.get("hiroba-token");
-        if (hirobaToken) {
-            await CapacitorCookies.setCookie({
-                url: "https://donderhiroba.jp",
-                key: '_token_v2',
-                value: hirobaToken,
-                path: '/'
-            })
-            await hirobaProfile.checkCardLogined();
-        }
-        const wikiToken = await SecureStorage.get("wiki-token");
-        if (wikiToken) {
-            await CapacitorCookies.setCookie({
-                url: "https://taiko.wiki",
-                key: 'auth-user',
-                value: wikiToken,
-                path: '/'
-            })
-            await wikiProfile.checkLogined();
-        }
+        await tick();
+        await hirobaProfile.checkCardLogined();
+        await wikiProfile.checkLogined();
     }
 </script>
 
-{#await loadHiroba() then}
+{#await loadHiroba()}
+    <img src={loading} alt="loading" />
+{:then}
     {#if !hirobaProfile.currentLogin}
         <main data-theme={theme}>
             <HirobaLogin
@@ -96,9 +73,6 @@
                 cardList={hirobaProfile.cardList}
                 cardLogin={async (taikoNumber) =>
                     await hirobaProfile.cardLogin(taikoNumber)}
-                setToken={async (token) => {
-                    await SecureStorage.set("hiroba-token", token);
-                }}
                 checkNamcoLogined={async () =>
                     await hirobaProfile.checkNamcoLogined()}
             />
@@ -106,9 +80,6 @@
     {:else if !wikiProfile.currentLogin}
         <main data-theme={theme}>
             <WikiLogin
-                setToken={async (token) => {
-                    await SecureStorage.set("wiki-token", token);
-                }}
                 checkLogined={async () => await wikiProfile.checkLogined()}
             />
         </main>

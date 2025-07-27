@@ -43,6 +43,10 @@ button {
     border: 1px solid transparent;
 }
 
+button:disabled{
+    opacity: 0.7;
+}
+
 body[data-theme="light"] button {
     background-color: #f9f9f9;
     color: black;
@@ -55,6 +59,6 @@ body[data-theme="dark"] button {
     border-color: white;
 }
 
-button:hover {
+button:not(:disabled):hover {
     border-color: #646cff !important;
 }

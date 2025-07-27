@@ -5,7 +5,6 @@
 
     interface Props {
         namcoLogined: boolean;
-        setToken: (token: string) => Promise<any>;
         checkNamcoLogined: () => Promise<any>;
         cardList: CardData[];
         cardLogin: (taikoNumber: string) => Promise<any>;
@@ -13,7 +12,6 @@
 
     let {
         namcoLogined,
-        setToken,
         checkNamcoLogined,
         cardList,
         cardLogin,
@@ -23,5 +21,5 @@
 {#if namcoLogined}
     <CardLogin {cardList} {cardLogin} />
 {:else}
-    <NamcoLogin {setToken} {checkNamcoLogined} />
+    <NamcoLogin {checkNamcoLogined} />
 {/if}

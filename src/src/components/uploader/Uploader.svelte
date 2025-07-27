@@ -11,13 +11,20 @@
 
     let hirobaCard = $derived(hirobaProfile.currentLogin) as CardData;
     let isUploading = $state(false);
+    let uploadType = $state<"clear" | "all">("all");
+
+    let lastUploadTrigger = $state(false);
 
     async function upload() {
         isUploading = true;
         try {
-            await ratingUploader.upload(hirobaProfile, wikiProfile);
+            if (uploadType === "clear") {
+            } else {
+                await ratingUploader.uploadAll(hirobaProfile, wikiProfile);
+            }
         } finally {
             isUploading = false;
+            lastUploadTrigger = !lastUploadTrigger;
         }
     }
 </script>
@@ -33,12 +40,28 @@
 <div class="container">
     {@render hirobaCardView()}
     <div class="message">{ratingUploader.message}</div>
+    <div class="radio-container">
+        <label>
+            <input type="radio" bind:group={uploadType} value="all" /> 점수 데이터
+            업로드 (레이팅)
+        </label>
+        <label>
+            <input type="radio" bind:group={uploadType} value="clear" /> 클리어 데이터
+            업로드
+        </label>
+    </div>
     <button class="upload-btn" onclick={upload} disabled={isUploading}>
         업로드
     </button>
-    {#each hirobaProfile.clearData as data}
-        {data[1].title}
-    {/each}
+    {#key lastUploadTrigger}
+        {#await ratingUploader.hirobaDataStorage.getLastUpload(hirobaCard.taikoNumber) then u}
+            {#if u}
+                <div>
+                    마지막 업데이트: {new Date(u.time).toLocaleString()}
+                </div>
+            {/if}
+        {/await}
+    {/key}
 </div>
 
 <style>
@@ -68,6 +91,11 @@
         & .taikonumber {
             font-size: 13px;
         }
+    }
+
+    .radio-container {
+        display: flex;
+        flex-direction: column;
     }
 
     .upload-btn {

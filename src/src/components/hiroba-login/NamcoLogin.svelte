@@ -2,13 +2,14 @@
     import { InAppBrowser } from "@capgo/inappbrowser";
 
     interface Props {
-        setToken: (token: string) => Promise<any>;
         checkNamcoLogined: () => Promise<any>;
     }
 
-    let { setToken, checkNamcoLogined }: Props = $props();
+    let { checkNamcoLogined }: Props = $props();
 
     async function openHirobaLoginBrowser() {
+        //await InAppBrowser.clearCache();
+
         await InAppBrowser.addListener("urlChangeEvent", async (event) => {
             if (new URL(event.url).origin === "https://donderhiroba.jp") {
                 const cookies = await InAppBrowser.getCookies({
@@ -18,12 +19,9 @@
 
                 const token = cookies["_token_v2"];
                 if (token) {
-                    await setToken(token);
                     await checkNamcoLogined();
-                    await InAppBrowser.close();
-                } else {
-                    await InAppBrowser.close();
                 }
+                 await InAppBrowser.close();
             }
         });
 

@@ -2,13 +2,14 @@
     import { InAppBrowser } from "@capgo/inappbrowser";
 
     interface Props {
-        setToken: (token: string) => Promise<any>;
         checkLogined: () => Promise<any>;
     }
 
-    let { setToken, checkLogined }: Props = $props();
+    let { checkLogined }: Props = $props();
 
     async function openWikiLoginBrowser() {
+        //await InAppBrowser.clearCache();
+
         await InAppBrowser.addListener("urlChangeEvent", async (event) => {
             if (event.url === "https://taiko.wiki/auth/user") {
                 const cookies = await InAppBrowser.getCookies({
@@ -18,7 +19,6 @@
 
                 const token = cookies["auth-user"];
                 if (token) {
-                    await setToken(token);
                     await checkLogined();
                     await InAppBrowser.close();
                 } else {
@@ -29,7 +29,7 @@
 
         await InAppBrowser.openWebView({
             url: "https://taiko.wiki/auth/login?redirect_to=/auth/user",
-            title: 'taiko.wiki Login'
+            title: "taiko.wiki Login",
         });
     }
 </script>
@@ -41,10 +41,10 @@
 </div>
 
 <style>
-    .container{
+    .container {
         width: 100%;
         height: 100%;
-        display:flex;
+        display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
@@ -52,7 +52,7 @@
         row-gap: 10px;
     }
 
-    button{
+    button {
         font-size: 16px;
     }
 </style>

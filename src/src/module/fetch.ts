@@ -1,4 +1,4 @@
-import { CapacitorHttp, Capacitor } from '@capacitor/core';
+import { CapacitorHttp, Capacitor, CapacitorCookies } from '@capacitor/core';
 
 async function fetchWrapper(url: string, options: RequestInit = {}) {
     const method = options.method?.toUpperCase() || 'GET';
@@ -6,11 +6,37 @@ async function fetchWrapper(url: string, options: RequestInit = {}) {
     const headers: Record<string, string> = {};
     if (options.headers instanceof Headers) {
         for (const [key, value] of options.headers.entries()) {
+            if (key.toLowerCase() === "cookie") {
+                /*
+                alert(value);
+                await CapacitorCookies.setCookie({
+                    url: new URL(url).origin,
+                    key: "_token_v2",
+                    value: value,
+                    path: "/",
+                    expires: "Thu, 31 Dec 2999 23:59:59 GMT"
+                });
+                */
+                continue;
+            };
             headers[key.split('-').map((e) => `${e[0].toUpperCase()}${e.slice(1)}`).join('-')] = String(value);
         }
     }
     else {
         for (const [key, value] of Object.entries(options.headers || {})) {
+            if (key.toLowerCase() === "cookie") {
+                /*
+                alert(value);
+                await CapacitorCookies.setCookie({
+                    url: new URL(url).origin,
+                    key: "_token_v2",
+                    value: value,
+                    path: "/",
+                    expires: "Thu, 31 Dec 2999 23:59:59 GMT"
+                });
+                */
+                continue;
+            };
             headers[key.split('-').map((e) => `${e[0].toUpperCase()}${e.slice(1)}`).join('-')] = String(value);
         }
     }

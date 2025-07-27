@@ -39,8 +39,9 @@ class HirobaProfile {
         this.cardLogined = false;
 
         try {
-            this.currentLogin = await DonderHiroba.func.getCurrentLogin();
-            if (this.currentLogin) {
+            const currentLogin = await DonderHiroba.func.getCurrentLogin();
+            this.currentLogin = currentLogin;
+            if (currentLogin) {
                 this.namcoLogined = true;
                 this.cardLogined = true;
                 return true;
