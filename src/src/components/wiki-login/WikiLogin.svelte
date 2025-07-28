@@ -1,15 +1,9 @@
 <script lang="ts">
     import { InAppBrowser } from "@capgo/inappbrowser";
-
-    interface Props {
-        checkLogined: () => Promise<any>;
-    }
-
-    let { checkLogined }: Props = $props();
+    import { SecureStorage } from "../../module/SecureStorage";
+    import { appState } from "../../module/AppState.svelte";
 
     async function openWikiLoginBrowser() {
-        //await InAppBrowser.clearCache();
-
         await InAppBrowser.addListener("urlChangeEvent", async (event) => {
             if (event.url === "https://taiko.wiki/auth/user") {
                 const cookies = await InAppBrowser.getCookies({
@@ -18,11 +12,16 @@
                 });
 
                 const token = cookies["auth-user"];
+                await InAppBrowser.close();
+                await InAppBrowser.clearAllCookies();
+                await InAppBrowser.clearCache();
+
                 if (token) {
-                    await checkLogined();
-                    await InAppBrowser.close();
+                    await SecureStorage.set("wiki-token", token);
+                    appState.wikiToken = token;
+                    await appState.updateWikiProfile();
                 } else {
-                    await InAppBrowser.close();
+                    alert("오류가 발생했습니다.");
                 }
             }
         });

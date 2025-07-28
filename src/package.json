@@ -21,7 +21,7 @@
     "@mateothegreat/svelte5-router": "^2.15.3",
     "@taiko-wiki/taikowiki-api": "^1.0.1",
     "dexie": "^4.0.11",
-    "hiroba-js": "^2.0.15",
+    "hiroba-js": "^2.0.18",
     "node-html-parser": "^7.0.1"
   }
 }

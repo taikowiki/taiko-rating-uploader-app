@@ -58,7 +58,19 @@ export class HirobaDataStorage {
         }
     }
 
-    mergeScoreDatas(oldDatas: HirobaDataStorage.ScoreDataRecord, newDatas: HirobaDataStorage.ScoreDataRecord) {
+    async clearCache(taikoNumber: string){
+        await this.db.scoreDatas.where('taikoNumber').equals(taikoNumber).delete();
+        await this.db.lastUpload.where('taikoNumber').equals(taikoNumber).delete();
+    }
+
+    async clearAllCache(){
+        await this.db.scoreDatas.clear();
+        await this.db.lastUpload.clear();
+    }
+}
+
+export namespace HirobaDataStorage {
+    export function mergeScoreDatas(oldDatas: HirobaDataStorage.ScoreDataRecord, newDatas: HirobaDataStorage.ScoreDataRecord) {
         const merged: HirobaDataStorage.ScoreDataRecord = {};
         for (const [songNo, scoreData] of Object.entries(oldDatas)) {
             merged[songNo] = structuredClone(scoreData);
@@ -76,7 +88,7 @@ export class HirobaDataStorage {
         return merged;
     }
 
-    isEqualCourseScoreData<T extends Pick<HirobaDataStorage.LastUpload, 'songNo' | 'difficulty' | 'data'>>(a: T, b: T){
+    export function isEqualCourseScoreData<T extends Pick<HirobaDataStorage.LastUpload, 'songNo' | 'difficulty' | 'data'>>(a: T, b: T){
         if(a.songNo !== b.songNo) return false;
         if(a.difficulty !== b.difficulty) return false;
         if(a.data.bad !== b.data.bad) return false;
@@ -94,9 +106,8 @@ export class HirobaDataStorage {
         if(a.data.count.play !== b.data.count.play) return false;
         return true;
     }
-}
 
-export namespace HirobaDataStorage {
+
     export interface ScoreDataRecord {
         [songNo: string]: ScoreData;
     }

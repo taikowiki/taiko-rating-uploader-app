@@ -7,7 +7,7 @@
       "enabled": true
     },
     "CapacitorCookies": {
-      "enalbed": true
+      "enalbed": false
     }
   },
   "android": {

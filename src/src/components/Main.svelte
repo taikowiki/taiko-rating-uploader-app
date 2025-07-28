@@ -1,72 +1,72 @@
 <script lang="ts">
-    import type { CardData } from "hiroba-js";
     import { getTheme } from "../module/theme.svelte";
-    import { getContext } from "svelte";
-    import type { HirobaProfile } from "../module/HirobaProfile.svelte";
-    import type { WikiProfile } from "../module/WikiProfile.svelte";
     import { SecureStorage } from "../module/SecureStorage";
-
-    let hirobaProfile = getContext("hirobaProfile") as HirobaProfile;
-    let wikiProfile = getContext("wikiProfile") as WikiProfile;
-
-    let hirobaCard = $derived(hirobaProfile.currentLogin) as CardData;
-    let wikiCurrentLogin = $derived(wikiProfile.currentLogin) as {
-        nickname: string;
-        UUID: string;
-    };
+    import { appState } from "../module/AppState.svelte";
 
     let theme = $derived(getTheme());
 
-    const cardLogout = () => hirobaProfile.checkNamcoLogined();
+    const cardLogout = () => appState.updateCardList();
     const hirobaLogout = async () => {
         await SecureStorage.remove("hiroba-token");
-        hirobaProfile.initialize();
+        appState.hirobaLogout();
     };
     const wikiLogout = async () => {
         await SecureStorage.remove("wiki-token");
-        wikiProfile.initialize();
+        appState.wikiLogout();
     };
 </script>
 
 {#snippet hirobaCardView()}
-    <div class="hiroba-container">
-        <div class="menu">
-            <div class="menu-left">
-                <span class="hiroba-header" data-theme={theme}>
-                    동더히로바 프로필
-                </span>
+    {#if appState.hirobaProfile && appState.hirobaProfile !== "namco"}
+        <div class="hiroba-container">
+            <div class="menu">
+                <div class="menu-left">
+                    <span class="hiroba-header" data-theme={theme}>
+                        동더히로바 프로필
+                    </span>
+                </div>
+                <div class="menu-right">
+                    <button onclick={cardLogout}>카드 선택</button>
+                    <button onclick={hirobaLogout}>로그아웃</button>
+                </div>
             </div>
-            <div class="menu-right">
-                <button onclick={cardLogout}>카드 선택</button>
-                <button onclick={hirobaLogout}>로그아웃</button>
+            <div class="content">
+                <img
+                    class="mydon"
+                    src={appState.hirobaProfile.myDon}
+                    alt="my don"
+                />
+                <div class="profile">
+                    <div class="nickname">
+                        {appState.hirobaProfile.nickname}
+                    </div>
+                    <div class="taikonumber">
+                        북 번호: {appState.hirobaProfile.taikoNumber}
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="content">
-            <img class="mydon" src={hirobaCard.myDon} alt="my don" />
-            <div class="profile">
-                <div class="nickname">{hirobaCard.nickname}</div>
-                <div class="taikonumber">북 번호: {hirobaCard.taikoNumber}</div>
-            </div>
-        </div>
-    </div>
+    {/if}
 {/snippet}
 {#snippet wikiProfileView()}
-    <div class="wiki-container">
-        <div class="menu">
-            <div class="menu-left">
-                <span class="wiki-header" data-theme={theme}>
-                    taiko.wiki 프로필
-                </span>
+    {#if appState.wikiProfile}
+        <div class="wiki-container">
+            <div class="menu">
+                <div class="menu-left">
+                    <span class="wiki-header" data-theme={theme}>
+                        taiko.wiki 프로필
+                    </span>
+                </div>
+                <div class="menu-right">
+                    <button onclick={wikiLogout}>로그아웃</button>
+                </div>
             </div>
-            <div class="menu-right">
-                <button onclick={wikiLogout}>로그아웃</button>
+            <div class="content">
+                <div class="nickname">{appState.wikiProfile.nickname}</div>
+                <div class="UUID">{appState.wikiProfile.UUID}</div>
             </div>
         </div>
-        <div class="content">
-            <div class="nickname">{wikiCurrentLogin.nickname}</div>
-            <div class="UUID">{wikiCurrentLogin.UUID}</div>
-        </div>
-    </div>
+    {/if}
 {/snippet}
 
 <div class="container">

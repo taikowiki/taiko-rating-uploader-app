@@ -4,42 +4,22 @@ async function fetchWrapper(url: string, options: RequestInit = {}) {
     const method = options.method?.toUpperCase() || 'GET';
 
     const headers: Record<string, string> = {};
+
     if (options.headers instanceof Headers) {
         for (const [key, value] of options.headers.entries()) {
-            if (key.toLowerCase() === "cookie") {
-                /*
-                alert(value);
-                await CapacitorCookies.setCookie({
-                    url: new URL(url).origin,
-                    key: "_token_v2",
-                    value: value,
-                    path: "/",
-                    expires: "Thu, 31 Dec 2999 23:59:59 GMT"
-                });
-                */
-                continue;
-            };
-            headers[key.split('-').map((e) => `${e[0].toUpperCase()}${e.slice(1)}`).join('-')] = String(value);
+            headers[key.toLowerCase()] = String(value);
         }
     }
     else {
         for (const [key, value] of Object.entries(options.headers || {})) {
-            if (key.toLowerCase() === "cookie") {
-                /*
-                alert(value);
-                await CapacitorCookies.setCookie({
-                    url: new URL(url).origin,
-                    key: "_token_v2",
-                    value: value,
-                    path: "/",
-                    expires: "Thu, 31 Dec 2999 23:59:59 GMT"
-                });
-                */
-                continue;
-            };
-            headers[key.split('-').map((e) => `${e[0].toUpperCase()}${e.slice(1)}`).join('-')] = String(value);
+            headers[key.toLowerCase()] = String(value);
         }
     }
+
+    if("cookie" in headers && !headers.cookie.trim().endsWith(';')){
+        headers.cookie += ';';
+    }
+
     const response = await CapacitorHttp.request({
         method,
         url,
@@ -68,6 +48,7 @@ async function fetchWrapper(url: string, options: RequestInit = {}) {
         url: response.url
     };
 }
+
 
 if (Capacitor.getPlatform() !== 'web') {
     //@ts-expect-error

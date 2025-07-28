@@ -7,7 +7,7 @@
     import { getContext } from "svelte";
 
     let theme = $derived(getTheme());
-    let hash = $derived((getContext('hash') as any).hash) as string;
+    let hash = $derived((getContext("hash") as any).hash) as string;
 
     const navData: { text: string; href: string; iconSrc: string }[] = [
         {
@@ -22,7 +22,7 @@
         },
         {
             text: "기록",
-            href: "#history",
+            href: "#record",
             iconSrc: historyIcon,
         },
         {
@@ -76,8 +76,9 @@
         row-gap: 5px;
         text-decoration: none;
 
-        &.current{
-            font-weight: bold;
+        &.current {
+            font-weight: bolder;
+            background-color: rgba(0, 0, 0, 0.2);
         }
 
         &[data-theme="light"] {
@@ -92,7 +93,6 @@
 
         &:hover {
             text-decoration: underline;
-            background-color: rgba(0, 0, 0, 0.2);
         }
 
         & img {

@@ -1,17 +1,11 @@
 <script lang="ts">
     import type { CardData } from "hiroba-js";
-
-    interface Props {
-        cardList: CardData[];
-        cardLogin: (taikoNumber: string) => Promise<any>;
-    }
-
-    let { cardList, cardLogin }: Props = $props();
+    import { appState } from "../../module/AppState.svelte";
 </script>
 
 <div class="container">
     <div>카드를 선택 해 주십시오.</div>
-    {#each cardList as card}
+    {#each appState.cardList as card}
         <div class="card">
             <div class="profile">
                 <img class="mydon" src={card.myDon} alt="mydon" />
@@ -24,7 +18,7 @@
                     </div>
                 </div>
             </div>
-            <button onclick={() => cardLogin(card.taikoNumber)}>
+            <button onclick={() => appState.cardLogin(card.taikoNumber)}>
                 로그인
             </button>
         </div>
