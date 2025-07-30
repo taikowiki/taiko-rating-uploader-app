@@ -9,11 +9,13 @@ export class HirobaDataStorage {
         this.db = new Dexie("HirobaDataStorage") as Dexie & {
             scoreDatas: EntityTable<HirobaDataStorage.ScoreDataCache, 'id'>;
             lastUpload: EntityTable<HirobaDataStorage.LastUpload, 'id'>;
+            playCount: EntityTable<HirobaDataStorage.PlayCount, 'id'>;
         };
 
-        this.db.version(1).stores({
+        this.db.version(2).stores({
             scoreDatas: "++id, &taikoNumber, scoreDataRecord",
-            lastUpload: "++id, &taikoNumber, time, songNo, difficulty, data"
+            lastUpload: "++id, &taikoNumber, time, songNo, difficulty, data",
+            playCount: "++id, &taikoNumber, data"
         });
 
         this.scoreDatas = this.db.scoreDatas;
@@ -33,7 +35,7 @@ export class HirobaDataStorage {
         }
     }
 
-    async getLastUpload(taikoNumber: string){
+    async getLastUpload(taikoNumber: string) {
         return (await this.db.lastUpload.where('taikoNumber').equals(taikoNumber).first()) ?? null;
     }
 
@@ -58,12 +60,26 @@ export class HirobaDataStorage {
         }
     }
 
-    async clearCache(taikoNumber: string){
+    async getPlayCount(taikoNumber: string){
+        return (await this.db.playCount.where('taikoNumber').equals(taikoNumber).first()) ?? null; 
+    }
+
+    async setPlayCount(taikoNumber: string, data: HirobaDataStorage.PlayCount['data']){
+        const d = await this.getPlayCount(taikoNumber);
+        if (d) {
+            await this.db.playCount.where('taikoNumber').equals(taikoNumber).modify((obj) => { obj.data = data })
+        }
+        else {
+            await this.db.playCount.put({ taikoNumber, data });
+        }
+    }
+
+    async clearCache(taikoNumber: string) {
         await this.db.scoreDatas.where('taikoNumber').equals(taikoNumber).delete();
         await this.db.lastUpload.where('taikoNumber').equals(taikoNumber).delete();
     }
 
-    async clearAllCache(){
+    async clearAllCache() {
         await this.db.scoreDatas.clear();
         await this.db.lastUpload.clear();
     }
@@ -88,22 +104,22 @@ export namespace HirobaDataStorage {
         return merged;
     }
 
-    export function isEqualCourseScoreData<T extends Pick<HirobaDataStorage.LastUpload, 'songNo' | 'difficulty' | 'data'>>(a: T, b: T){
-        if(a.songNo !== b.songNo) return false;
-        if(a.difficulty !== b.difficulty) return false;
-        if(a.data.bad !== b.data.bad) return false;
-        if(a.data.badge !== b.data.badge) return false;
-        if(a.data.crown !== b.data.crown) return false;
-        if(a.data.good !== b.data.good) return false;
-        if(a.data.maxCombo !== b.data.maxCombo) return false;
-        if(a.data.ok !== b.data.ok) return false;
-        if(a.data.ranking !== b.data.ranking) return false;
-        if(a.data.roll !== b.data.roll) return false;
-        if(a.data.score !== b.data.score) return false;
-        if(a.data.count.clear !== b.data.count.clear) return false;
-        if(a.data.count.donderfullcombo !== b.data.count.donderfullcombo) return false;
-        if(a.data.count.fullcombo !== b.data.count.fullcombo) return false;
-        if(a.data.count.play !== b.data.count.play) return false;
+    export function isEqualCourseScoreData<T extends Pick<HirobaDataStorage.LastUpload, 'songNo' | 'difficulty' | 'data'>>(a: T, b: T) {
+        if (a.songNo !== b.songNo) return false;
+        if (a.difficulty !== b.difficulty) return false;
+        if (a.data.bad !== b.data.bad) return false;
+        if (a.data.badge !== b.data.badge) return false;
+        if (a.data.crown !== b.data.crown) return false;
+        if (a.data.good !== b.data.good) return false;
+        if (a.data.maxCombo !== b.data.maxCombo) return false;
+        if (a.data.ok !== b.data.ok) return false;
+        if (a.data.ranking !== b.data.ranking) return false;
+        if (a.data.roll !== b.data.roll) return false;
+        if (a.data.score !== b.data.score) return false;
+        if (a.data.count.clear !== b.data.count.clear) return false;
+        if (a.data.count.donderfullcombo !== b.data.count.donderfullcombo) return false;
+        if (a.data.count.fullcombo !== b.data.count.fullcombo) return false;
+        if (a.data.count.play !== b.data.count.play) return false;
         return true;
     }
 
@@ -125,5 +141,16 @@ export namespace HirobaDataStorage {
         songNo: string;
         difficulty: Difficulty;
         data: DifficultyScoreData;
+    }
+
+    export interface PlayCount {
+        id?: number;
+        taikoNumber: string;
+        data: {
+            play: number;
+            clear: number;
+            fc: number;
+            dfc: number;
+        };
     }
 }

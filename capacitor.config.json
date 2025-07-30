@@ -1,6 +1,6 @@
 {
   "appId": "com.taikowiki.ratinguploader",
-  "appName": "Taiko Rating Uploader",
+  "appName": "taiko.wiki 레이팅 업로더",
   "webDir": "www",
   "plugins": {
     "CapacitorHttp": {

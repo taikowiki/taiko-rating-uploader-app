@@ -22,7 +22,7 @@
         },
         {
             text: "기록",
-            href: "#record",
+            href: "#history",
             iconSrc: historyIcon,
         },
         {

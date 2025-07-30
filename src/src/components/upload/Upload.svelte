@@ -1,5 +1,6 @@
 <script lang="ts">
     import { appState } from "../../module/AppState.svelte";
+    import HirobaCardView from "../HirobaCardView.svelte";
 
     let uploadMode = $state<"clear" | "all">("all");
     let lastUploadTrigger = $state(false);
@@ -10,18 +11,8 @@
     }
 </script>
 
-{#snippet hirobaCardView()}
-    {#if appState.hirobaProfile && appState.hirobaProfile !== "namco"}
-        <div class="hiroba">
-            <img src={appState.hirobaProfile.myDon} alt="mydon" />
-            <div class="nickname">{appState.hirobaProfile.nickname}</div>
-            <div class="taikonumber">{appState.hirobaProfile.taikoNumber}</div>
-        </div>
-    {/if}
-{/snippet}
-
 <div class="container">
-    {@render hirobaCardView()}
+    <HirobaCardView />
     <div class="message">{appState.uploadMessage}</div>
     <div class="radio-container">
         <label>
@@ -55,27 +46,6 @@
         flex-direction: column;
         align-items: center;
         row-gap: 10px;
-    }
-
-    .hiroba {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        row-gap: 3px;
-
-        & img {
-            width: 150px;
-            max-width: 100%;
-        }
-
-        & .nickname {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        & .taikonumber {
-            font-size: 13px;
-        }
     }
 
     .radio-container {

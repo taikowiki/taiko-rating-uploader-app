@@ -1,4 +1,4 @@
-import { DonderHiroba, util, type Badge, type CardData, type Clear, type ClearData, type Crown, type Difficulty, type DifficultyScoreData } from "hiroba-js";
+import { DonderHiroba, util, type Badge, type CardData, type Clear, type ClearData, type Crown, type Difficulty, type DifficultyScoreData, type ScoreData } from "hiroba-js";
 import { HirobaDataStorage } from "./HirobaDataStorage";
 import { HTMLElement, parse as parseHtml } from "node-html-parser";
 
@@ -25,16 +25,19 @@ class AppState {
             const cardData = await this.hirobaErrorWrapper(() => DonderHiroba.func.getCardList({ token: this.hirobaToken ?? undefined }));
             this.hirobaProfile = 'namco';
             this.cardList = cardData;
+            this.hirobaCache = null;
         }
         catch { }
     }
     async cardLogin(taikoNumber: string) {
+        this.hirobaCache = null;
         const currentLogin = await this.hirobaErrorWrapper(() => DonderHiroba.func.cardLogin({
             token: this.hirobaToken ?? undefined,
             taikoNumber,
             cardList: this.cardList
         }));
         this.hirobaProfile = currentLogin;
+        await this.loadHirobaCache(taikoNumber);
     }
     async updateHirobaRecord() {
         await this.hirobaErrorWrapper(() => DonderHiroba.func.updateRecord({ token: this.hirobaToken ?? undefined }));
@@ -51,6 +54,7 @@ class AppState {
         this.hirobaToken = null;
         this.hirobaProfile = null;
         this.cardList = [];
+        this.hirobaCache = null;
     }
     private async hirobaErrorWrapper<T>(callback: () => (T | Promise<T>)) {
         try {
@@ -191,6 +195,11 @@ class AppState {
             if (newLastUploadData) {
                 await this.hirobaDataStorage.setLastUpload(this.hirobaProfile.taikoNumber, newLastUploadData?.songNo, newLastUploadData?.difficulty, newLastUploadData?.data);
             };
+
+            const playCount = this.calculatePlayCount(Object.values(merged));
+            await this.hirobaDataStorage.setPlayCount(this.hirobaProfile.taikoNumber, playCount);
+            await this.loadHirobaCache(this.hirobaProfile.taikoNumber);
+
             this.setUploadMessage('업로드 완료!');
         }
         catch {
@@ -333,10 +342,76 @@ class AppState {
             method: 'post'
         });
     }
+    private calculatePlayCount(scoreDatas: ScoreData[]) {
+        let play = 0;
+        let clear = 0;
+        let fc = 0;
+        let dfc = 0;
+
+        scoreDatas.forEach((d) => {
+            (["oni", "ura"] as const).forEach((diff) => {
+                if (diff in d.difficulty && d.difficulty[diff]?.count) {
+                    play += d.difficulty[diff].count.play;
+                    clear += d.difficulty[diff].count.clear;
+                    fc += d.difficulty[diff].count.fullcombo;
+                    dfc += d.difficulty[diff].count.donderfullcombo;
+                }
+            })
+        });
+
+        return { play, clear, fc, dfc };
+    }
 
 
     // data storgage
     hirobaDataStorage = $state(new HirobaDataStorage());
+
+    // cache
+    hirobaCache = $state<HirobaCache | null>(null);
+
+    async loadHirobaCache(taikoNumber: string) {
+        const playCount = await this.hirobaDataStorage.getPlayCount(taikoNumber);
+        if (!playCount) return;
+        const scoreData = await this.hirobaDataStorage.getScoreDatas(taikoNumber);
+        if (!scoreData) return;
+
+        const difficultyScoreDatas: HirobaCache['difficultyScoreDatas'] = [];
+        Object.values(scoreData.scoreDataRecord).forEach((d: ScoreData) => {
+            if (d.difficulty?.oni) {
+                difficultyScoreDatas.push({
+                    title: d.title,
+                    songNo: d.songNo,
+                    data: d.difficulty.oni,
+                    diff: 'oni'
+                })
+            }
+            if (d.difficulty?.ura) {
+                difficultyScoreDatas.push({
+                    title: d.title,
+                    songNo: d.songNo,
+                    data: d.difficulty.ura,
+                    diff: 'ura'
+                })
+            }
+        });
+        difficultyScoreDatas.sort((a, b) => b.data.count.play - a.data.count.play);
+
+        this.hirobaCache = {
+            playCount: playCount.data,
+            difficultyScoreDatas,
+            scoreDataMap: scoreData.scoreDataRecord
+        }
+    }
+
+    async clearHirobaCache() {
+        this.hirobaCache = null;
+    }
 }
 
 export const appState = new AppState();
+
+type HirobaCache = {
+    playCount: HirobaDataStorage.PlayCount['data'];
+    difficultyScoreDatas: {songNo: string, diff: 'oni' | 'ura', title: string, data: DifficultyScoreData}[];
+    scoreDataMap: Record<string, ScoreData>;
+}

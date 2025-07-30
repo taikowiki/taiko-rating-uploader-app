@@ -12,7 +12,7 @@
     import { setContext, tick } from "svelte";
     import loading from "./assets/icon/loading.svg";
     import { appState } from "./module/AppState.svelte";
-    import Record from "./components/record/Record.svelte";
+    import History from "./components/history/History.svelte";
     import Setting from "./components/setting/Setting.svelte";
 
     let hash = $state({ hash: location.hash || "#" });
@@ -47,8 +47,8 @@
             component: Upload,
         },
         {
-            path: "record",
-            component: Record
+            path: "history",
+            component: History
         },
         {
             path: "setting",
