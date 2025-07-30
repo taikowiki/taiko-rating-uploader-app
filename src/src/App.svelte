@@ -14,6 +14,7 @@
     import { appState } from "./module/AppState.svelte";
     import History from "./components/history/History.svelte";
     import Setting from "./components/setting/Setting.svelte";
+    import { App } from "@capacitor/app";
 
     let hash = $state({ hash: location.hash || "#" });
     setContext("hash", hash);
@@ -48,22 +49,37 @@
         },
         {
             path: "history",
-            component: History
+            component: History,
         },
         {
             path: "setting",
-            component: Setting
-        }
+            component: Setting,
+        },
     ];
 
     async function loadHiroba() {
         if (Capacitor.getPlatform() === "web") return;
         await tick();
+        const indemnityClauseAgrred = await SecureStorage.get(
+            "indemnity-clause-agreed",
+        );
+        if (indemnityClauseAgrred !== "true") {
+            if (
+                confirm(
+                    "면책 조항\n이 앱은 (주)반다이 남코 엔터테인먼트와 관련이 없는 비공식 앱입니다.\n이 앱의 일부 기능은 donderhiroba.jp의 이용 약관을 위반할 수 있습니다.\n이로 인해 발생할 수 있는 모든 문제에 대한 모든 책임은 사용자 본인에게 있음에 동의합니다.",
+                )
+            ) {
+                await SecureStorage.set("indemnity-clause-agreed", "true");
+            } else {
+                await App.exitApp();
+                return;
+            }
+        }
 
         const hirobaToken = await SecureStorage.get("hiroba-token");
         if (hirobaToken) {
             //alert(hirobaToken);
-            appState.hirobaToken = hirobaToken; 
+            appState.hirobaToken = hirobaToken;
             await appState.updateHirobaProfile();
         }
 
